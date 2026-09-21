@@ -13,7 +13,7 @@ public class ExampleJavaMod extends Mod {
     public static Block goblinLink;
 
     public ExampleJavaMod() {
-        Log.info("Goblin Storage v0.3.2 loaded!");
+        Log.info("GOBLIN JAVA TEST LOADED!");
     }
 
     @Override
@@ -21,7 +21,7 @@ public class ExampleJavaMod extends Mod {
 
         goblinLink = new GoblinLink("goblin-link");
 
-        goblinLink.localizedName = "Goblin Link";
+        goblinLink.localizedName = "GOBLIN LINK [JAVA TEST]";
         goblinLink.description = "Remote storage link - test version.";
 
         // Видим в меню строительства
