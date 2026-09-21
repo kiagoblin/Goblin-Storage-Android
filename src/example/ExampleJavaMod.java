@@ -22,23 +22,27 @@ public class ExampleJavaMod extends Mod {
         goblinLink = new GoblinLink("goblin-link");
 
         goblinLink.localizedName = "GOBLIN LINK [JAVA TEST]";
-        goblinLink.description = "Remote storage link - test version.";
+        goblinLink.description = "Goblin Storage remote storage link test.";
 
-        // Видим в меню строительства
+        // Категория строительства.
         goblinLink.category = Category.effect;
+
+        // Показывать в меню строительства.
         goblinLink.buildVisibility = BuildVisibility.shown;
 
-        // Всегда разблокирован для теста
+        // Разблокирован сразу.
         goblinLink.alwaysUnlocked = true;
+
+        // Показывать в базе данных.
         goblinLink.hideDatabase = false;
 
-        // Стоимость
+        // Стоимость строительства.
         goblinLink.requirements = new ItemStack[]{
             new ItemStack(Items.copper, 100),
             new ItemStack(Items.lead, 100),
             new ItemStack(Items.graphite, 50)
         };
 
-        Log.info("Goblin Link registered: " + goblinLink.name);
+        Log.info("GOBLIN LINK REGISTERED: " + goblinLink.name);
     }
-}
+            }
