@@ -12,14 +12,11 @@ public class GoblinLink extends StorageBlock {
         itemCapacity = 1000;
         health = 500;
 
-        // Используем существующую текстуру Mindustry,
-        // чтобы пока не создавать отдельный спрайт.
+        // Используем существующую текстуру Mindustry
         region = Core.atlas.find("vault");
-    }
 
-    @Override
-    public StorageBuild buildType() {
-        return new GoblinLinkBuild();
+        // Правильная регистрация типа Building для v8
+        buildType = () -> new GoblinLinkBuild();
     }
 
     public class GoblinLinkBuild extends StorageBuild {
