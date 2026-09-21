@@ -1,6 +1,23 @@
+# the mod name as displayed in-game
 displayName: "Goblin Storage"
+
+# the internal name of your mod
 name: "goblin-storage"
+
+# your name
 author: "kiagoblin"
+
+# the fully qualified main class of the mod
 main: "example.ExampleJavaMod"
+
+# the mod description as seen in the mod dialog
 description: "Goblin Storage - remote item storage network."
+
+# the mod version
 version: 0.3.1
+
+# the minimum game build required to run this mod
+minGameVersion: 160.3
+
+# this is a java mod
+java: true
