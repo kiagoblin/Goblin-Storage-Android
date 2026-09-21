@@ -1,6 +1,12 @@
 displayName: "Goblin Storage"
 name: "goblin-storage"
 author: "kiagoblin"
+
 main: "example.ExampleJavaMod"
+java: true
+
 description: "Goblin Storage - remote item storage network."
-version: 0.3.3
+
+version: "0.3.4"
+
+minGameVersion: "160.4"
