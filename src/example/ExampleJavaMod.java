@@ -4,7 +4,6 @@ import arc.util.Log;
 import mindustry.content.Items;
 import mindustry.type.Category;
 import mindustry.world.Block;
-import mindustry.world.blocks.storage.StorageBlock;
 import mindustry.mod.Mod;
 
 public class ExampleJavaMod extends Mod {
@@ -24,6 +23,7 @@ public class ExampleJavaMod extends Mod {
         goblinLink.description = "Remote storage link - test version.";
 
         goblinLink.category = Category.effect;
+        goblinLink.buildVisibility = mindustry.world.meta.BuildVisibility.shown;
 
         goblinLink.requirements = new mindustry.type.ItemStack[]{
             new mindustry.type.ItemStack(Items.copper, 100),
