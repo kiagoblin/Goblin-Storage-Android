@@ -2,7 +2,7 @@ package example;
 
 import arc.Core;
 import mindustry.gen.Building;
-import mindustry.type.ItemStack;
+import mindustry.type.Item;
 import mindustry.world.blocks.storage.StorageBlock;
 
 public class GoblinLink extends StorageBlock {
@@ -27,48 +27,31 @@ public class GoblinLink extends StorageBlock {
         public void updateTile() {
             super.updateTile();
 
-            // Ищем ближайшее ядро своей команды.
+            // Ищем ядро своей команды.
             Building core = core();
 
-            // Если ядра нет — ничего не делаем.
-            if (core == null || items.total <= 0) {
+            // Если ядра нет или Goblin Link пустой — ничего не делаем.
+            if (core == null || items.total() <= 0) {
                 return;
             }
 
-            // Получаем список предметов, которые сейчас находятся
-            // внутри Goblin Link.
-            ItemStack[] stacks = items.toArray();
+            // Берём первый тип предмета, который находится в Goblin Link.
+            Item item = items.first();
 
-            // Переносим предметы в ядро.
-            // За один тик переносится максимум 10 штук.
-            for (ItemStack stack : stacks) {
-
-                if (stack.amount <= 0) {
-                    continue;
-                }
-
-                int accepted = core.getMaximumAccepted(stack.item);
-
-                if (accepted <= 0) {
-                    continue;
-                }
-
-                int amount = Math.min(stack.amount, 10);
-                amount = Math.min(amount, accepted);
-
-                if (amount <= 0) {
-                    continue;
-                }
-
-                // Убираем предметы из Goblin Link.
-                items.remove(stack.item, amount);
-
-                // Добавляем их в ядро.
-                core.items.add(stack.item, amount);
-
-                // За один тик обрабатываем только один тип предмета.
-                break;
+            if (item == null) {
+                return;
             }
+
+            // Проверяем, может ли ядро принять этот предмет.
+            if (!core.acceptItem(this, item)) {
+                return;
+            }
+
+            // Передаём один предмет в ядро.
+            core.handleItem(this, item);
+
+            // Удаляем его из Goblin Link.
+            items.remove(item, 1);
         }
     }
 }
