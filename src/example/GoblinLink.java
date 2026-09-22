@@ -14,7 +14,11 @@ public class GoblinLink extends StorageBlock {
         itemCapacity = 1000;
         health = 500;
 
-        // Стандартная текстура хранилища Mindustry.
+        // ВАЖНО:
+        // разрешаем блоку выполнять updateTile().
+        update = true;
+
+        // Используем стандартную текстуру хранилища Mindustry.
         region = Core.atlas.find("vault");
 
         // Тип постройки.
@@ -27,27 +31,27 @@ public class GoblinLink extends StorageBlock {
         public void updateTile() {
             super.updateTile();
 
-            // Если в Goblin Link ничего нет — выходим.
+            // Если Goblin Link пустой — ничего не делаем.
             if (items.total() <= 0) {
                 return;
             }
 
-            // Находим ядро нашей команды.
+            // Получаем ядро нашей команды.
             Building core = core();
 
-            // Если ядро не найдено — ждём следующий тик.
+            // Если ядра нет — ждём следующий тик.
             if (core == null) {
                 return;
             }
 
-            // Получаем первый предмет в Goblin Link.
+            // Получаем первый предмет из Goblin Link.
             Item item = items.first();
 
             if (item == null) {
                 return;
             }
 
-            // Проверяем, сколько такого предмета ещё может принять ядро.
+            // Проверяем, сколько такого предмета может принять ядро.
             int accepted = core.getMaximumAccepted(item);
 
             if (accepted <= 0) {
@@ -56,16 +60,18 @@ public class GoblinLink extends StorageBlock {
 
             // Передаём максимум 10 предметов за тик.
             int amount = Math.min(10, accepted);
+
+            // Нельзя передать больше, чем есть в Goblin Link.
             amount = Math.min(amount, items.get(item));
 
             if (amount <= 0) {
                 return;
             }
 
-            // Добавляем предметы непосредственно в ядро.
+            // Добавляем предметы в ядро.
             core.items.add(item, amount);
 
-            // Удаляем такое же количество из Goblin Link.
+            // Убираем такое же количество из Goblin Link.
             items.remove(item, amount);
         }
     }
