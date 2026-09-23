@@ -21,49 +21,56 @@ public class GoblinLink extends StorageBlock {
         // Разрешаем блоку выполнять updateTile().
         update = true;
 
-        // Используем стандартную текстуру хранилища Mindustry.
+        // Стандартная текстура хранилища Mindustry.
         region = Core.atlas.find("vault");
 
         // Тип постройки.
         buildType = () -> new GoblinLinkBuild();
 
-        // Разрешаем открывать меню настройки блока.
+        // Разрешаем настройку блока.
         configurable = true;
+
+        // Двойное нажатие очищает выбранный предмет.
+        clearOnDoubleTap = true;
+
+        // Очистка конфигурации.
+        configClear((GoblinLinkBuild build) -> {
+            build.selectedItem = null;
+        });
     }
 
     public class GoblinLinkBuild extends StorageBuild {
 
-        // Выбранный предмет для получения из ядра.
+        // Предмет, который нужно постоянно получать из ядра.
         private Item selectedItem;
-
-        // Небольшая задержка после получения предмета,
-        // чтобы он не улетел обратно в ядро сразу же.
-        private int pullCooldown = 0;
 
         @Override
         public void buildConfiguration(Table table) {
 
-            // Стандартное меню выбора предмета Mindustry.
+            // Стандартный выбор предмета Mindustry.
             ItemSelection.buildTable(
                 table,
                 Vars.content.items(),
                 () -> selectedItem,
                 item -> configure(item)
             );
+
+            // Кнопка отмены выбора.
+            table.row();
+
+            table.button(
+                "ОТМЕНА",
+                () -> configure(null)
+            ).size(180f, 50f);
         }
 
         @Override
         public void configured(Unit builder, Object value) {
 
             if (value instanceof Item) {
-
                 selectedItem = (Item)value;
-
-                pullFromCore(selectedItem);
-
-                // Даём предмету немного времени остаться
-                // внутри Goblin Link для проверки.
-                pullCooldown = 120;
+            } else {
+                selectedItem = null;
             }
         }
 
@@ -79,33 +86,26 @@ public class GoblinLink extends StorageBlock {
                 return;
             }
 
-            // Проверяем, сколько такого предмета есть в ядре.
             int available = core.items.get(item);
 
             if (available <= 0) {
                 return;
             }
 
-            // Проверяем свободное место в Goblin Link.
             int free = itemCapacity - items.get(item);
 
             if (free <= 0) {
                 return;
             }
 
-            // Забираем максимум 10 предметов за одно нажатие.
             int amount = Math.min(10, available);
-
             amount = Math.min(amount, free);
 
             if (amount <= 0) {
                 return;
             }
 
-            // Забираем предметы из ядра.
             core.items.remove(item, amount);
-
-            // Добавляем их в Goblin Link.
             items.add(item, amount);
         }
 
@@ -114,53 +114,58 @@ public class GoblinLink extends StorageBlock {
 
             super.updateTile();
 
-            // После ручного получения временно
-            // запрещаем отправлять предмет обратно.
-            if (pullCooldown > 0) {
-                pullCooldown--;
+            /*
+             * ЕСЛИ ВЫБРАН ПРЕДМЕТ:
+             *
+             * Ядро → Goblin Link
+             *
+             * Передача выбранного предмета продолжается постоянно.
+             */
+            if (selectedItem != null) {
+
+                pullFromCore(selectedItem);
+
                 return;
             }
 
-            // Если Goblin Link пустой — ничего не делаем.
+            /*
+             * ЕСЛИ ПРЕДМЕТ НЕ ВЫБРАН:
+             *
+             * Старый режим:
+             *
+             * Goblin Link → Ядро
+             */
+
             if (items.total() <= 0) {
                 return;
             }
 
-            // Получаем ядро нашей команды.
             Building core = core();
 
             if (core == null) {
                 return;
             }
 
-            // Получаем первый предмет из Goblin Link.
             Item item = items.first();
 
             if (item == null) {
                 return;
             }
 
-            // Проверяем, сколько такого предмета может принять ядро.
             int accepted = core.getMaximumAccepted(item);
 
             if (accepted <= 0) {
                 return;
             }
 
-            // Передаём максимум 10 предметов за тик.
             int amount = Math.min(10, accepted);
-
-            // Не передаём больше, чем есть в Goblin Link.
             amount = Math.min(amount, items.get(item));
 
             if (amount <= 0) {
                 return;
             }
 
-            // Передаём предметы в ядро.
             core.items.add(item, amount);
-
-            // Убираем их из Goblin Link.
             items.remove(item, amount);
         }
     }
