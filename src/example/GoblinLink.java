@@ -2,6 +2,7 @@ package example;
 
 import arc.Core;
 import arc.scene.ui.layout.Table;
+import arc.struct.Seq;
 import mindustry.Vars;
 import mindustry.gen.Building;
 import mindustry.gen.Unit;
@@ -30,44 +31,55 @@ public class GoblinLink extends StorageBlock {
         // Разрешаем настройку блока.
         configurable = true;
 
-        // Двойное нажатие очищает выбранный предмет.
+        // Двойное нажатие очищает выбранные предметы.
         clearOnDoubleTap = true;
 
         // Очистка конфигурации.
         configClear((GoblinLinkBuild build) -> {
-            build.selectedItem = null;
+            build.selectedItems.clear();
         });
     }
 
     public class GoblinLinkBuild extends StorageBuild {
 
-        private Item selectedItem;
+        // Список выбранных предметов.
+        private Seq<Item> selectedItems = new Seq<>();
 
         @Override
         public void buildConfiguration(Table table) {
 
+            /*
+             * Выбор предметов.
+             *
+             * Нажатие на предмет:
+             * - если его нет в списке → добавляет;
+             * - если уже есть → убирает.
+             */
             ItemSelection.buildTable(
                 table,
                 Vars.content.items(),
-                () -> selectedItem,
-                item -> configure(item)
+                () -> null,
+                item -> toggleItem(item)
             );
 
             table.row();
 
             table.button(
                 "ОТМЕНА",
-                () -> configure(null)
+                () -> selectedItems.clear()
             ).size(180f, 50f);
         }
 
-        @Override
-        public void configured(Unit builder, Object value) {
+        private void toggleItem(Item item) {
 
-            if (value instanceof Item) {
-                selectedItem = (Item)value;
+            if (item == null) {
+                return;
+            }
+
+            if (selectedItems.contains(item)) {
+                selectedItems.remove(item);
             } else {
-                selectedItem = null;
+                selectedItems.add(item);
             }
         }
 
@@ -109,8 +121,8 @@ public class GoblinLink extends StorageBlock {
         /*
          * Goblin Link → Core
          *
-         * Используем штатную систему передачи Mindustry.
-         * Ядро само проверяет, может ли принять предмет.
+         * Передаём предметы через штатную систему Mindustry.
+         * Ядро само контролирует свой лимит.
          */
         private void pushToCore(Item item) {
 
@@ -130,15 +142,11 @@ public class GoblinLink extends StorageBlock {
                     break;
                 }
 
-                // Ядро само проверяет свой реальный лимит.
                 if (!core.acceptItem(this, item)) {
                     break;
                 }
 
-                // Передаём один предмет штатным способом.
                 core.handleItem(this, item);
-
-                // Удаляем его из Goblin Link.
                 items.remove(item, 1);
             }
         }
@@ -149,23 +157,32 @@ public class GoblinLink extends StorageBlock {
             super.updateTile();
 
             /*
-             * ЕСЛИ ВЫБРАН ПРЕДМЕТ:
+             * ЕСЛИ ЕСТЬ ВЫБРАННЫЕ ПРЕДМЕТЫ:
              *
              * Ядро → Goblin Link
              */
-            if (selectedItem != null) {
+            if (selectedItems.size > 0) {
 
-                pullFromCore(selectedItem);
+                /*
+                 * Проходим по всем выбранным предметам.
+                 */
+                for (Item item : selectedItems) {
+
+                    if (items.total() >= itemCapacity) {
+                        break;
+                    }
+
+                    pullFromCore(item);
+                }
 
                 return;
             }
 
             /*
-             * ЕСЛИ ПРЕДМЕТ НЕ ВЫБРАН:
+             * ЕСЛИ НИЧЕГО НЕ ВЫБРАНО:
              *
              * Goblin Link → Ядро
              */
-
             if (items.total() <= 0) {
                 return;
             }
