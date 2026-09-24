@@ -41,13 +41,11 @@ public class GoblinLink extends StorageBlock {
 
     public class GoblinLinkBuild extends StorageBuild {
 
-        // Предмет, который нужно постоянно получать из ядра.
         private Item selectedItem;
 
         @Override
         public void buildConfiguration(Table table) {
 
-            // Стандартный выбор предмета Mindustry.
             ItemSelection.buildTable(
                 table,
                 Vars.content.items(),
@@ -55,7 +53,6 @@ public class GoblinLink extends StorageBlock {
                 item -> configure(item)
             );
 
-            // Кнопка отмены выбора.
             table.row();
 
             table.button(
@@ -109,6 +106,43 @@ public class GoblinLink extends StorageBlock {
             items.add(item, amount);
         }
 
+        /*
+         * Goblin Link → Core
+         *
+         * Используем штатную систему передачи Mindustry.
+         * Ядро само проверяет, может ли принять предмет.
+         */
+        private void pushToCore(Item item) {
+
+            if (item == null) {
+                return;
+            }
+
+            Building core = core();
+
+            if (core == null) {
+                return;
+            }
+
+            for (int i = 0; i < 10; i++) {
+
+                if (items.get(item) <= 0) {
+                    break;
+                }
+
+                // Ядро само проверяет свой реальный лимит.
+                if (!core.acceptItem(this, item)) {
+                    break;
+                }
+
+                // Передаём один предмет штатным способом.
+                core.handleItem(this, item);
+
+                // Удаляем его из Goblin Link.
+                items.remove(item, 1);
+            }
+        }
+
         @Override
         public void updateTile() {
 
@@ -118,8 +152,6 @@ public class GoblinLink extends StorageBlock {
              * ЕСЛИ ВЫБРАН ПРЕДМЕТ:
              *
              * Ядро → Goblin Link
-             *
-             * Передача выбранного предмета продолжается постоянно.
              */
             if (selectedItem != null) {
 
@@ -138,45 +170,13 @@ public class GoblinLink extends StorageBlock {
                 return;
             }
 
-            Building core = core();
-
-            if (core == null) {
-                return;
-            }
-
             Item item = items.first();
 
             if (item == null) {
                 return;
             }
 
-            // Максимальная вместимость ядра для этого предмета.
-            int accepted = core.getMaximumAccepted(item);
-
-            // Сколько этого предмета уже находится в ядре.
-            int current = core.items.get(item);
-
-            // Реально свободное место в ядре.
-            int free = accepted - current;
-
-            // Ядро заполнено этим предметом.
-            if (free <= 0) {
-                return;
-            }
-
-            // Передаём не больше 10 и не больше свободного места.
-            int amount = Math.min(10, free);
-
-            // Нельзя передать больше, чем есть в Goblin Link.
-            amount = Math.min(amount, items.get(item));
-
-            if (amount <= 0) {
-                return;
-            }
-
-            // Передаём предметы в ядро.
-            core.items.add(item, amount);
-            items.remove(item, amount);
+            pushToCore(item);
         }
     }
 }
