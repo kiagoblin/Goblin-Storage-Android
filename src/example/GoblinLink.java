@@ -131,8 +131,6 @@ public class GoblinLink extends StorageBlock {
             /*
              * ЕСЛИ ПРЕДМЕТ НЕ ВЫБРАН:
              *
-             * Старый режим:
-             *
              * Goblin Link → Ядро
              */
 
@@ -152,19 +150,31 @@ public class GoblinLink extends StorageBlock {
                 return;
             }
 
+            // Максимальная вместимость ядра для этого предмета.
             int accepted = core.getMaximumAccepted(item);
 
-            if (accepted <= 0) {
+            // Сколько этого предмета уже находится в ядре.
+            int current = core.items.get(item);
+
+            // Реально свободное место в ядре.
+            int free = accepted - current;
+
+            // Ядро заполнено этим предметом.
+            if (free <= 0) {
                 return;
             }
 
-            int amount = Math.min(10, accepted);
+            // Передаём не больше 10 и не больше свободного места.
+            int amount = Math.min(10, free);
+
+            // Нельзя передать больше, чем есть в Goblin Link.
             amount = Math.min(amount, items.get(item));
 
             if (amount <= 0) {
                 return;
             }
 
+            // Передаём предметы в ядро.
             core.items.add(item, amount);
             items.remove(item, amount);
         }
