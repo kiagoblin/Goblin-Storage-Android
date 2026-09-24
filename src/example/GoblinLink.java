@@ -19,22 +19,22 @@ public class GoblinLink extends StorageBlock {
         itemCapacity = 1000;
         health = 500;
 
-        // Разрешаем блоку выполнять updateTile().
+        // Разрешаем updateTile().
         update = true;
 
-        // Стандартная текстура хранилища Mindustry.
+        // Стандартная текстура хранилища.
         region = Core.atlas.find("vault");
 
         // Тип постройки.
         buildType = () -> new GoblinLinkBuild();
 
-        // Разрешаем настройку блока.
+        // Разрешаем настройку.
         configurable = true;
 
-        // Двойное нажатие очищает выбранные предметы.
+        // Двойное нажатие очищает список.
         clearOnDoubleTap = true;
 
-        // Очистка конфигурации.
+        // Очистка списка выбранных предметов.
         configClear((GoblinLinkBuild build) -> {
             build.selectedItems.clear();
         });
@@ -42,34 +42,43 @@ public class GoblinLink extends StorageBlock {
 
     public class GoblinLinkBuild extends StorageBuild {
 
-        // Список выбранных предметов.
+        /*
+         * Все выбранные пользователем предметы.
+         */
         private Seq<Item> selectedItems = new Seq<>();
 
         @Override
         public void buildConfiguration(Table table) {
 
             /*
-             * Выбор предметов.
+             * Окно выбора НЕ закрывается после выбора.
              *
-             * Нажатие на предмет:
-             * - если его нет в списке → добавляет;
-             * - если уже есть → убирает.
+             * Поэтому можно нажать:
+             * медь → свинец → графит → титан
+             * и все они останутся выбранными.
              */
             ItemSelection.buildTable(
                 table,
                 Vars.content.items(),
                 () -> null,
-                item -> toggleItem(item)
+                this::toggleItem,
+                false
             );
 
             table.row();
 
+            /*
+             * Кнопка полной отмены.
+             */
             table.button(
                 "ОТМЕНА",
                 () -> selectedItems.clear()
             ).size(180f, 50f);
         }
 
+        /*
+         * Добавить/убрать предмет из списка.
+         */
         private void toggleItem(Item item) {
 
             if (item == null) {
@@ -83,6 +92,9 @@ public class GoblinLink extends StorageBlock {
             }
         }
 
+        /*
+         * Ядро → Goblin Link.
+         */
         private void pullFromCore(Item item) {
 
             if (item == null) {
@@ -119,10 +131,77 @@ public class GoblinLink extends StorageBlock {
         }
 
         /*
-         * Goblin Link → Core
+         * Goblin Link → соседний блок.
          *
-         * Передаём предметы через штатную систему Mindustry.
-         * Ядро само контролирует свой лимит.
+         * Разгрузчик НЕ нужен.
+         *
+         * Проверяем соседние здания и передаём предмет
+         * напрямую через штатные acceptItem/handleItem.
+         */
+        private boolean pushToNearby(Item item) {
+
+            if (item == null) {
+                return false;
+            }
+
+            if (items.get(item) <= 0) {
+                return false;
+            }
+
+            Building core = core();
+
+            /*
+             * Перебираем соседние здания.
+             */
+            for (Building next : proximity) {
+
+                if (next == null) {
+                    continue;
+                }
+
+                /*
+                 * Не отправляем выбранный предмет обратно
+                 * в ядро.
+                 */
+                if (next == core) {
+                    continue;
+                }
+
+                /*
+                 * Только наши здания.
+                 */
+                if (next.team != team) {
+                    continue;
+                }
+
+                /*
+                 * Спрашиваем соседний блок,
+                 * может ли он принять предмет.
+                 */
+                if (!next.acceptItem(this, item)) {
+                    continue;
+                }
+
+                /*
+                 * Передаём предмет штатным способом.
+                 */
+                next.handleItem(this, item);
+
+                /*
+                 * Убираем его из Goblin Link.
+                 */
+                items.remove(item, 1);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /*
+         * Goblin Link → Ядро.
+         *
+         * Используется только когда ничего не выбрано.
          */
         private void pushToCore(Item item) {
 
@@ -142,11 +221,15 @@ public class GoblinLink extends StorageBlock {
                     break;
                 }
 
+                /*
+                 * Ядро само проверяет свой лимит.
+                 */
                 if (!core.acceptItem(this, item)) {
                     break;
                 }
 
                 core.handleItem(this, item);
+
                 items.remove(item, 1);
             }
         }
@@ -157,14 +240,20 @@ public class GoblinLink extends StorageBlock {
             super.updateTile();
 
             /*
-             * ЕСЛИ ЕСТЬ ВЫБРАННЫЕ ПРЕДМЕТЫ:
+             * =========================================
+             * РЕЖИМ ВЫБРАННЫХ ПРЕДМЕТОВ
+             * =========================================
              *
              * Ядро → Goblin Link
+             *
+             * И одновременно:
+             *
+             * Goblin Link → соседние блоки
              */
             if (selectedItems.size > 0) {
 
                 /*
-                 * Проходим по всем выбранным предметам.
+                 * Забираем выбранные ресурсы из ядра.
                  */
                 for (Item item : selectedItems) {
 
@@ -175,14 +264,40 @@ public class GoblinLink extends StorageBlock {
                     pullFromCore(item);
                 }
 
+                /*
+                 * Выдаём выбранные ресурсы наружу.
+                 */
+                for (Item item : selectedItems) {
+
+                    /*
+                     * За один тик пытаемся передать
+                     * несколько предметов.
+                     */
+                    for (int i = 0; i < 10; i++) {
+
+                        if (items.get(item) <= 0) {
+                            break;
+                        }
+
+                        if (!pushToNearby(item)) {
+                            break;
+                        }
+                    }
+                }
+
                 return;
             }
 
             /*
-             * ЕСЛИ НИЧЕГО НЕ ВЫБРАНО:
+             * =========================================
+             * ОБЫЧНЫЙ РЕЖИМ
+             * =========================================
+             *
+             * Если ничего не выбрано:
              *
              * Goblin Link → Ядро
              */
+
             if (items.total() <= 0) {
                 return;
             }
