@@ -1,6 +1,10 @@
 package example;
 
 import arc.Core;
+import arc.graphics.Color;
+import arc.scene.ui.Image;
+import arc.scene.ui.Label;
+import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
 import mindustry.Vars;
@@ -51,7 +55,70 @@ public class GoblinLink extends StorageBlock {
         public void buildConfiguration(Table table) {
 
             /*
-             * Окно выбора предметов.
+             * =========================================
+             * ВЫБРАННЫЕ ПРЕДМЕТЫ
+             * =========================================
+             */
+
+            table.add("ВЫБРАНО:").left().pad(5f);
+            table.row();
+
+            if (selectedItems.size == 0) {
+
+                table.add("Ничего не выбрано")
+                    .color(Color.lightGray)
+                    .left()
+                    .pad(5f);
+
+                table.row();
+
+            } else {
+
+                /*
+                 * Показываем все выбранные предметы.
+                 */
+                Table selectedTable = new Table();
+
+                for (Item item : selectedItems) {
+
+                    Stack stack = new Stack();
+
+                    /*
+                     * Иконка предмета.
+                     */
+                    stack.add(new Image(item.uiIcon));
+
+                    /*
+                     * Зелёная галочка поверх иконки.
+                     */
+                    Label check = new Label("✓");
+                    check.setColor(Color.green);
+
+                    stack.add(check);
+
+                    selectedTable.add(stack)
+                        .size(42f)
+                        .pad(3f);
+                }
+
+                table.add(selectedTable)
+                    .left()
+                    .pad(5f);
+
+                table.row();
+            }
+
+            /*
+             * Разделитель.
+             */
+            table.add("────────────────")
+                .color(Color.gray)
+                .row();
+
+            /*
+             * =========================================
+             * ВЫБОР ПРЕДМЕТОВ
+             * =========================================
              *
              * Можно выбирать несколько предметов.
              */
@@ -66,7 +133,9 @@ public class GoblinLink extends StorageBlock {
             table.row();
 
             /*
-             * Полная отмена выбора.
+             * =========================================
+             * ОТМЕНА
+             * =========================================
              */
             table.button(
                 "ОТМЕНА",
@@ -84,16 +153,21 @@ public class GoblinLink extends StorageBlock {
             }
 
             if (selectedItems.contains(item)) {
+
+                // Уже выбран → убираем.
                 selectedItems.remove(item);
+
             } else {
+
+                // Не выбран → добавляем.
                 selectedItems.add(item);
             }
         }
 
         /*
-         * Ядро → Goblin Link.
-         *
-         * Для каждого предмета действует отдельный лимит 1000.
+         * =========================================
+         * ЯДРО → GOBLIN LINK
+         * =========================================
          */
         private void pullFromCore(Item item) {
 
@@ -114,7 +188,9 @@ public class GoblinLink extends StorageBlock {
             }
 
             /*
-             * Свободное место ИМЕННО для этого предмета.
+             * Свободное место именно для ЭТОГО предмета.
+             *
+             * Каждый тип может храниться до 1000.
              */
             int free = itemCapacity - items.get(item);
 
@@ -134,7 +210,9 @@ public class GoblinLink extends StorageBlock {
         }
 
         /*
-         * Goblin Link → соседний блок.
+         * =========================================
+         * GOBLIN LINK → СОСЕДНИЙ БЛОК
+         * =========================================
          *
          * Разгрузчик НЕ нужен.
          */
@@ -174,19 +252,19 @@ public class GoblinLink extends StorageBlock {
                 }
 
                 /*
-                 * Проверяем, может ли сосед принять предмет.
+                 * Может ли сосед принять предмет?
                  */
                 if (!next.acceptItem(this, item)) {
                     continue;
                 }
 
                 /*
-                 * Передаём предмет напрямую.
+                 * Передаём напрямую.
                  */
                 next.handleItem(this, item);
 
                 /*
-                 * Убираем предмет из Link.
+                 * Убираем из Link.
                  */
                 items.remove(item, 1);
 
@@ -197,9 +275,11 @@ public class GoblinLink extends StorageBlock {
         }
 
         /*
-         * Goblin Link → Ядро.
+         * =========================================
+         * GOBLIN LINK → ЯДРО
+         * =========================================
          *
-         * Работает только когда ничего не выбрано.
+         * Используется, когда ничего не выбрано.
          */
         private void pushToCore(Item item) {
 
@@ -220,7 +300,7 @@ public class GoblinLink extends StorageBlock {
                 }
 
                 /*
-                 * Ядро само проверяет свой лимит.
+                 * Ядро само контролирует свой лимит.
                  */
                 if (!core.acceptItem(this, item)) {
                     break;
@@ -244,18 +324,14 @@ public class GoblinLink extends StorageBlock {
              *
              * Ядро → Goblin Link
              *
-             * И одновременно:
-             *
-             * Goblin Link → соседние блоки
+             * Goblin Link → заводы
              */
             if (selectedItems.size > 0) {
 
                 /*
-                 * Получаем КАЖДЫЙ выбранный предмет.
+                 * Получаем каждый выбранный предмет.
                  *
-                 * Здесь НЕТ общего лимита items.total().
-                 *
-                 * Каждый предмет имеет свой лимит 1000.
+                 * У каждого свой лимит 1000.
                  */
                 for (Item item : selectedItems) {
 
@@ -287,7 +363,7 @@ public class GoblinLink extends StorageBlock {
              * ОБЫЧНЫЙ РЕЖИМ
              * =========================================
              *
-             * Если ничего не выбрано:
+             * Ничего не выбрано:
              *
              * Goblin Link → Ядро
              */
@@ -304,4 +380,4 @@ public class GoblinLink extends StorageBlock {
             pushToCore(item);
         }
     }
-}
+            }
