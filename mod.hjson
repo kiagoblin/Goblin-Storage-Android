@@ -2,7 +2,7 @@ displayName: "Goblin Storage"
 name: "goblin-storage"
 author: "kiagoblin"
 
-main: "example.ExampleJavaMod"
+main: "goblinlink.Goblinlink"
 java: true
 
 description: "Goblin Storage - remote item storage network."
