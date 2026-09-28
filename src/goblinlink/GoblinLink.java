@@ -10,12 +10,12 @@ public class GoblinLink extends Mod {
     public static GoblinLinkBlock goblinLinkBlock;
 
     public GoblinLink() {
-        // Конструктор по умолчанию без аргументов
+        // Конструктор по умолчанию без аргументов для Mindustry
     }
 
     @Override
     public void loadContent() {
-        // Создаем блок и задаем его рецепт
+        // Регистрируем блок под именем "goblin-link"
         goblinLinkBlock = new GoblinLinkBlock("goblin-link");
         goblinLinkBlock.requirements(Category.distribution, ItemStack.with(
             Items.copper, 100,
