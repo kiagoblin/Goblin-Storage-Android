@@ -1,12 +1,8 @@
-displayName: "Goblin Storage"
-name: "goblin-storage"
-author: "kiagoblin"
-
-main: "goblinlink.Goblinlink"
+name: "goblin-link"
+displayName: "Goblin Link"
+author: "YourName"
+main: "goblinlink.GoblinLink"
+description: "Хранилище с возможностью авто-забора предметов из ядра."
+version: "1.0.0"
+minGameVersion: "146"
 java: true
-
-description: "Goblin Storage - remote item storage network."
-
-version: "0.3.4"
-
-minGameVersion: "160.4"
