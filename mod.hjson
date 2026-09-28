@@ -4,5 +4,5 @@ author: "YourName"
 main: "goblinlink.GoblinLink"
 description: "Хранилище с возможностью авто-забора предметов из ядра."
 version: "1.0.0"
-minGameVersion: "146"
+minGameVersion: "154"
 java: true
