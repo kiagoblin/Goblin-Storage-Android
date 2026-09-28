@@ -26,6 +26,9 @@ public class GoblinLinkBlock extends StorageBlock {
         update = true;
         configurable = true;
         clearOnDoubleTap = true;
+        hasItems = true;
+        solid = true;
+        destructible = true;
 
         config(Item.class, (GoblinLinkBuild build, Item item) -> {
             build.toggleItem(item);
@@ -39,8 +42,13 @@ public class GoblinLinkBlock extends StorageBlock {
     @Override
     public void load() {
         super.load();
-        if (!region.found()) {
-            region = Core.atlas.find("vault");
+        // Ищем текстуру по полному имени блока или по базовому
+        if (Core.atlas.has(name)) {
+            region = Core.atlas.find(name);
+        } else if (Core.atlas.has("goblin-link")) {
+            region = Core.atlas.find("goblin-link");
+        } else if (Core.atlas.has("goblin-link-goblin-link")) {
+            region = Core.atlas.find("goblin-link-goblin-link");
         }
     }
 
@@ -209,4 +217,4 @@ public class GoblinLinkBlock extends StorageBlock {
             }
         }
     }
-      }
+}
