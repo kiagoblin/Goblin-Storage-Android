@@ -1,6 +1,8 @@
 package goblinlink;
 
+import arc.Core;
 import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
 import arc.scene.ui.Image;
 import arc.scene.ui.Label;
 import arc.scene.ui.layout.Stack;
@@ -19,7 +21,7 @@ public class GoblinLinkBlock extends StorageBlock {
     public GoblinLinkBlock(String name) {
         super(name);
 
-        size = 2;                  // Размер 2x2 идеально совпадает с текстурой 32x32
+        size = 2;
         itemCapacity = 1000;
         health = 500;
         update = true;
@@ -36,6 +38,29 @@ public class GoblinLinkBlock extends StorageBlock {
         configClear((GoblinLinkBuild build) -> {
             build.selectedItems.clear();
         });
+    }
+
+    @Override
+    public void load() {
+        super.load();
+
+        if (Core.atlas.has(name)) {
+            region = Core.atlas.find(name);
+        } else if (Core.atlas.has("block-goblin-link-goblin-link")) {
+            region = Core.atlas.find("block-goblin-link-goblin-link");
+        } else if (Core.atlas.has("goblin-link-goblin-link")) {
+            region = Core.atlas.find("goblin-link-goblin-link");
+        } else if (Core.atlas.has("goblin-link")) {
+            region = Core.atlas.find("goblin-link");
+        }
+
+        uiIcon = region;
+        fullIcon = region;
+    }
+
+    @Override
+    public void drawBase(Building build) {
+        Draw.rect(region, build.x, build.y);
     }
 
     public class GoblinLinkBuild extends StorageBuild {
