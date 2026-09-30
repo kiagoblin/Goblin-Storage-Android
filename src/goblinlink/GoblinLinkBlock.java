@@ -58,13 +58,14 @@ public class GoblinLinkBlock extends StorageBlock {
         fullIcon = region;
     }
 
-    @Override
-    public void drawBase(Building build) {
-        Draw.rect(region, build.x, build.y);
-    }
-
     public class GoblinLinkBuild extends StorageBuild {
         public Seq<Item> selectedItems = new Seq<>();
+
+        @Override
+        public void draw() {
+            super.draw();
+            Draw.rect(region, x, y);
+        }
 
         @Override
         public void buildConfiguration(Table table) {
@@ -228,4 +229,4 @@ public class GoblinLinkBlock extends StorageBlock {
             }
         }
     }
-}
+        }
