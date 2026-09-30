@@ -110,7 +110,7 @@ public class GoblinLinkBlock extends StorageBlock {
             if (available <= 0) return;
 
             int free = itemCapacity - items.get(item);
-            if free <= 0) return;
+            if (free <= 0) return;
 
             int amount = Math.min(10, available);
             amount = Math.min(amount, free);
