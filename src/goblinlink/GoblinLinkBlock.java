@@ -1,6 +1,5 @@
 package goblinlink;
 
-import arc.Core;
 import arc.graphics.Color;
 import arc.scene.ui.Image;
 import arc.scene.ui.Label;
@@ -20,7 +19,7 @@ public class GoblinLinkBlock extends StorageBlock {
     public GoblinLinkBlock(String name) {
         super(name);
 
-        size = 2;
+        size = 2;                  // Размер 2x2 идеально совпадает с текстурой 32x32
         itemCapacity = 1000;
         health = 500;
         update = true;
@@ -37,19 +36,6 @@ public class GoblinLinkBlock extends StorageBlock {
         configClear((GoblinLinkBuild build) -> {
             build.selectedItems.clear();
         });
-    }
-
-    @Override
-    public void load() {
-        super.load();
-        // Ищем текстуру по полному имени блока или по базовому
-        if (Core.atlas.has(name)) {
-            region = Core.atlas.find(name);
-        } else if (Core.atlas.has("goblin-link")) {
-            region = Core.atlas.find("goblin-link");
-        } else if (Core.atlas.has("goblin-link-goblin-link")) {
-            region = Core.atlas.find("goblin-link-goblin-link");
-        }
     }
 
     public class GoblinLinkBuild extends StorageBuild {
@@ -124,7 +110,7 @@ public class GoblinLinkBlock extends StorageBlock {
             if (available <= 0) return;
 
             int free = itemCapacity - items.get(item);
-            if (free <= 0) return;
+            if free <= 0) return;
 
             int amount = Math.min(10, available);
             amount = Math.min(amount, free);
