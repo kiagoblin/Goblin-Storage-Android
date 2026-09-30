@@ -64,7 +64,8 @@ public class GoblinLinkBlock extends StorageBlock {
         @Override
         public void draw() {
             super.draw();
-            Draw.rect(region, x, y);
+            // Явно задаем физический размер отрисовки 16x16 units (2x2 блока)
+            Draw.rect(region, x, y, size * Vars.tilesize, size * Vars.tilesize);
         }
 
         @Override
@@ -229,4 +230,4 @@ public class GoblinLinkBlock extends StorageBlock {
             }
         }
     }
-        }
+            }
