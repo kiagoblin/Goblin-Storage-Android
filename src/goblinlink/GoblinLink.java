@@ -1,27 +1,29 @@
 package goblinlink;
 
 import mindustry.mod.Mod;
-import mindustry.type.Category;
-import mindustry.type.ItemStack;
+import mindustry.content.Blocks;
+import mindustry.content.TechTree;
+import static mindustry.type.ItemStack.with;
 import mindustry.content.Items;
 
-public class GoblinLink extends Mod {
+public class GoblinLinkMod extends Mod {
 
-    public static GoblinLinkBlock goblinLinkBlock;
-
-    public GoblinLink() {
-        // Конструктор по умолчанию без аргументов для Mindustry
+    public GoblinLinkMod() {
+        // Конструктор мода (может быть пустым)
     }
 
     @Override
     public void loadContent() {
-        // Регистрируем блок под именем "goblin-link"
-        goblinLinkBlock = new GoblinLinkBlock("goblin-link");
-        goblinLinkBlock.requirements(Category.distribution, ItemStack.with(
-            Items.copper, 100,
-            Items.lead, 50,
-            Items.silicon, 40
-        ));
-  
+        super.loadContent();
+
+        // Добавляем «Гоблин Линк» в дерево исследований после кремниевой плавильни (silicon-smelter)
+        TechTree.addNode(Blocks.siliconSmelter, GoblinLinkContent.goblinLinkBlock, () -> {
+            // Стоимость открытия в дереве технологий (например, кремний, свинец и медь)
+            node.requirements = with(
+                Items.silicon, 250,
+                Items.lead, 200,
+                Items.copper, 400
+            );
+        });
     }
 }
