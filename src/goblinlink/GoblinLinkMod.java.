@@ -18,10 +18,8 @@ public class GoblinLinkMod extends Mod {
     public void loadContent() {
         super.loadContent();
 
-        // Создаем и регистрируем блок «Гоблин Линк»
         goblinLinkBlock = new GoblinLinkBlock("goblin-link");
 
-        // Добавляем в дерево технологий сразу после кремниевой плавильни
         TechTree.node(Blocks.siliconSmelter, goblinLinkBlock, () -> {
             node.requirements = with(
                 Items.silicon, 250,
@@ -29,5 +27,6 @@ public class GoblinLinkMod extends Mod {
                 Items.copper, 400
             );
         });
-    }
+
+}
 }
