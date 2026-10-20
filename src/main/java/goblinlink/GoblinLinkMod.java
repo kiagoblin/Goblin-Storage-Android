@@ -24,9 +24,7 @@ public class GoblinLinkMod extends Mod {
             Items.silicon, 250,
             Items.lead, 200,
             Items.copper, 400
-        ), () -> {
-            // Здесь можно добавлять дочерние узлы при необходимости
-        });
+        ), () -> {});
 
     }
 }
