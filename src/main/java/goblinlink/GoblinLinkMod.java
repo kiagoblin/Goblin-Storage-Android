@@ -1,16 +1,30 @@
+package goblinlink;
+
+import mindustry.mod.Mod;
+import mindustry.content.Blocks;
+import mindustry.content.TechTree;
+import static mindustry.type.ItemStack.with;
+import mindustry.content.Items;
+import mindustry.world.Block;
+
+public class GoblinLinkMod extends Mod {
+
+    public static Block goblinLinkBlock;
+
+    public GoblinLinkMod() {
+    }
+
     @Override
     public void loadContent() {
         super.loadContent();
 
         goblinLinkBlock = new GoblinLinkBlock("goblin-link");
 
-        TechTree.node(Blocks.siliconSmelter, () -> {
-            node(goblinLinkBlock, with(
-                Items.silicon, 250,
-                Items.lead, 200,
-                Items.copper, 400
-            ), () -> {
-                // Здесь можно добавлять дочерние элементы, если они нужны
-            });
-        });
+        TechTree.node(Blocks.siliconSmelter, goblinLinkBlock, with(
+            Items.silicon, 250,
+            Items.lead, 200,
+            Items.copper, 400
+        ), () -> {});
+
+    }
 }
