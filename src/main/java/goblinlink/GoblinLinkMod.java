@@ -20,13 +20,13 @@ public class GoblinLinkMod extends Mod {
 
         goblinLinkBlock = new GoblinLinkBlock("goblin-link");
 
-        TechTree.node(Blocks.siliconSmelter, goblinLinkBlock, () -> {
-            node.requirements = with(
-                Items.silicon, 250,
-                Items.lead, 200,
-                Items.copper, 400
-            );
+        TechTree.node(Blocks.siliconSmelter, goblinLinkBlock, with(
+            Items.silicon, 250,
+            Items.lead, 200,
+            Items.copper, 400
+        ), () -> {
+            // Здесь можно добавлять дочерние узлы при необходимости
         });
 
+    }
 }
-                      }
