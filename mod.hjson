@@ -1,7 +1,7 @@
 name: "goblin-link"
 displayName: "Goblin Link"
 author: "YourName"
-main: "goblinlink.GoblinLink"
+main: "goblinlink.GoblinLinkMod"
 description: "Хранилище с возможностью авто-забора предметов из ядра."
 version: "1.0.0"
 minGameVersion: "154"
