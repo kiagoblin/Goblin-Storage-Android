@@ -11,15 +11,22 @@ import arc.struct.Seq;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
+import mindustry.content.Items;
+import mindustry.type.Category;
 import mindustry.gen.Building;
 import mindustry.type.Item;
 import mindustry.world.blocks.ItemSelection;
 import mindustry.world.blocks.storage.StorageBlock;
 
+import static mindustry.type.ItemStack.with;
+
 public class GoblinLinkBlock extends StorageBlock {
 
     public GoblinLinkBlock(String name) {
         super(name);
+
+        // Без requirements блок скрыт: его нет ни в меню строительства, ни в базе данных.
+        requirements(Category.effect, with(Items.copper, 50, Items.lead, 25));
 
         size = 2;
         itemCapacity = 1000;
