@@ -1,6 +1,5 @@
 package goblinlink;
 
-import arc.Core;
 import arc.graphics.Color;
 import arc.graphics.g2d.Draw;
 import arc.scene.ui.Image;
@@ -8,12 +7,14 @@ import arc.scene.ui.Label;
 import arc.scene.ui.layout.Stack;
 import arc.scene.ui.layout.Table;
 import arc.struct.Seq;
+import arc.util.Strings;
+import arc.util.Time;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
 import mindustry.content.Items;
-import mindustry.type.Category;
 import mindustry.gen.Building;
+import mindustry.type.Category;
 import mindustry.type.Item;
 import mindustry.world.blocks.ItemSelection;
 import mindustry.world.blocks.storage.StorageBlock;
@@ -22,6 +23,11 @@ import static mindustry.type.ItemStack.with;
 
 public class GoblinLinkBlock extends StorageBlock {
 
+    /** Базовая ёмкость Линка (на каждый вид предмета), без модулей хранения. */
+    public static final int BASE_CAPACITY = 10;
+    /** Базовая скорость передачи (предметов в секунду), без процессоров. */
+    public static final float BASE_TRANSFER_RATE = 2f;
+
     public GoblinLinkBlock(String name) {
         super(name);
 
@@ -29,7 +35,7 @@ public class GoblinLinkBlock extends StorageBlock {
         requirements(Category.effect, with(Items.copper, 1000, Items.lead, 650, Items.silicon, 500));
 
         size = 2;
-        itemCapacity = 1000;
+        itemCapacity = BASE_CAPACITY;
         health = 500;
         update = true;
         configurable = true;
@@ -51,22 +57,37 @@ public class GoblinLinkBlock extends StorageBlock {
     public void load() {
         super.load();
 
-        if (Core.atlas.has(name)) {
-            region = Core.atlas.find(name);
-        } else if (Core.atlas.has("block-goblin-link-goblin-link")) {
-            region = Core.atlas.find("block-goblin-link-goblin-link");
-        } else if (Core.atlas.has("goblin-link-goblin-link")) {
-            region = Core.atlas.find("goblin-link-goblin-link");
-        } else if (Core.atlas.has("goblin-link")) {
-            region = Core.atlas.find("goblin-link");
-        }
-
+        region = GoblinSprites.find(name, region);
         uiIcon = region;
         fullIcon = region;
     }
 
     public class GoblinLinkBuild extends StorageBuild {
         public Seq<Item> selectedItems = new Seq<>();
+
+        /** Бонусы от модулей: модули за тик складывают их сюда, Линк забирает в начале своего тика. */
+        public int pendingCapacity = 0;
+        public float pendingSpeed = 0f;
+
+        /** Действующие бонусы (за прошлый тик). */
+        public int capacityBonus = 0;
+        public float speedBonus = 0f;
+
+        /** Накопленный запас передач: одна передача = один предмет. */
+        private float budget = 0f;
+
+        public int currentCapacity() {
+            return BASE_CAPACITY + capacityBonus;
+        }
+
+        public float transferRate() {
+            return BASE_TRANSFER_RATE + speedBonus;
+        }
+
+        @Override
+        public int getMaximumAccepted(Item item) {
+            return linkedCore != null ? super.getMaximumAccepted(item) : currentCapacity();
+        }
 
         @Override
         public void draw() {
@@ -77,6 +98,11 @@ public class GoblinLinkBlock extends StorageBlock {
 
         @Override
         public void buildConfiguration(Table table) {
+            table.label(() -> "Ёмкость: " + currentCapacity() + " | Скорость: " + Strings.fixed(transferRate(), 1) + "/с")
+                .left()
+                .pad(5f);
+            table.row();
+
             table.add("ВЫБРАНО:").left().pad(5f);
             table.row();
 
@@ -134,28 +160,23 @@ public class GoblinLinkBlock extends StorageBlock {
             }
         }
 
-        private void pullFromCore(Item item) {
-            if (item == null) return;
+        /** Переносит один предмет из ядра в Линк. */
+        private boolean pullOneFromCore(Item item) {
+            if (item == null) return false;
 
             Building core = core();
-            if (core == null) return;
+            if (core == null) return false;
 
-            int available = core.items.get(item);
-            if (available <= 0) return;
+            if (core.items.get(item) <= 0) return false;
+            if (items.get(item) >= getMaximumAccepted(item)) return false;
 
-            int free = itemCapacity - items.get(item);
-            if (free <= 0) return;
-
-            int amount = Math.min(10, available);
-            amount = Math.min(amount, free);
-
-            if (amount <= 0) return;
-
-            core.items.remove(item, amount);
-            items.add(item, amount);
+            core.items.remove(item, 1);
+            items.add(item, 1);
+            return true;
         }
 
-        private boolean pushToNearby(Item item) {
+        /** Отдаёт один предмет соседнему блоку (кроме ядра). */
+        private boolean pushOneToNearby(Item item) {
             if (item == null || items.get(item) <= 0) return false;
 
             Building core = core();
@@ -173,44 +194,63 @@ public class GoblinLinkBlock extends StorageBlock {
             return false;
         }
 
-        private void pushToCore(Item item) {
-            if (item == null) return;
+        /** Возвращает один предмет из Линка в ядро. */
+        private boolean pushOneToCore(Item item) {
+            if (item == null || items.get(item) <= 0) return false;
 
             Building core = core();
-            if (core == null) return;
+            if (core == null) return false;
+            if (!core.acceptItem(this, item)) return false;
 
-            for (int i = 0; i < 10; i++) {
-                if (items.get(item) <= 0) break;
-                if (!core.acceptItem(this, item)) break;
-
-                core.handleItem(this, item);
-                items.remove(item, 1);
-            }
+            core.handleItem(this, item);
+            items.remove(item, 1);
+            return true;
         }
 
         @Override
         public void updateTile() {
             super.updateTile();
 
-            if (selectedItems.size > 0) {
-                for (Item item : selectedItems) {
-                    pullFromCore(item);
-                }
+            // Забираем бонусы, которые модули успели добавить за прошлый тик.
+            capacityBonus = pendingCapacity;
+            speedBonus = pendingSpeed;
+            pendingCapacity = 0;
+            pendingSpeed = 0f;
 
-                for (Item item : selectedItems) {
-                    for (int i = 0; i < 10; i++) {
-                        if (items.get(item) <= 0) break;
-                        if (!pushToNearby(item)) break;
+            // Запас передач копится со скоростью transferRate и ограничен примерно секундой работы.
+            float rate = transferRate();
+            budget = Math.min(budget + rate / 60f * Time.delta, Math.max(2f, rate));
+
+            if (selectedItems.size > 0) {
+                int guard = 0;
+
+                while (budget >= 1f && guard++ < 256) {
+                    boolean moved = false;
+
+                    for (Item item : selectedItems) {
+                        if (budget >= 1f && pullOneFromCore(item)) {
+                            budget -= 1f;
+                            moved = true;
+                        }
+
+                        if (budget >= 1f && pushOneToNearby(item)) {
+                            budget -= 1f;
+                            moved = true;
+                        }
                     }
+
+                    if (!moved) break;
                 }
                 return;
             }
 
             if (items.total() <= 0) return;
 
-            Item item = items.first();
-            if (item != null) {
-                pushToCore(item);
+            int guard = 0;
+            while (budget >= 1f && guard++ < 256) {
+                Item item = items.first();
+                if (item == null || !pushOneToCore(item)) break;
+                budget -= 1f;
             }
         }
 
@@ -226,9 +266,9 @@ public class GoblinLinkBlock extends StorageBlock {
         @Override
         public void read(Reads read, byte revision) {
             super.read(read, revision);
-            int size = read.s();
+            int count = read.s();
             selectedItems.clear();
-            for (int i = 0; i < size; i++) {
+            for (int i = 0; i < count; i++) {
                 short id = read.s();
                 Item item = Vars.content.item(id);
                 if (item != null) {
@@ -237,4 +277,4 @@ public class GoblinLinkBlock extends StorageBlock {
             }
         }
     }
-            }
+}
