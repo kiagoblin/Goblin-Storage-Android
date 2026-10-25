@@ -76,7 +76,7 @@ jar{
     }
 
     from(projectDir){
-        include "mod.hjson"
+        include "mod.hjson", "icon.png"
     }
 
     from("assets/"){
