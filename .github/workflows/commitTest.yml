@@ -2,6 +2,9 @@ name: Build Mod
 
 on: [push, pull_request]
 
+permissions:
+  contents: write
+
 jobs:
   buildJar:
     runs-on: ubuntu-latest
@@ -26,3 +29,12 @@ jobs:
         archive: false
         name: ${{ github.event.repository.name }}
         path: build/libs/${{ github.event.repository.name }}.jar
+    - name: Publish latest release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        JAR="build/libs/${{ github.event.repository.name }}.jar"
+        gh release delete latest --cleanup-tag --yes || true
+        gh release create latest "$JAR" --target "${{ github.sha }}" --latest \
+          --title "Latest build" --notes "Автоматическая сборка из master."
