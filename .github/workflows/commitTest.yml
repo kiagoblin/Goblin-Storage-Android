@@ -38,3 +38,14 @@ jobs:
         gh release delete latest --cleanup-tag --yes || true
         gh release create latest "$JAR" --target "${{ github.sha }}" --latest \
           --title "Latest build" --notes "Автоматическая сборка из master."
+    - name: Publish versioned release
+      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        VERSION=$(grep -oP '^version:\s*"\K[^"]+' mod.hjson)
+        JAR="build/libs/${{ github.event.repository.name }}.jar"
+        if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+          gh release create "v$VERSION" "$JAR" --target "${{ github.sha }}" --latest=false \
+            --title "Goblin Link v$VERSION" --notes "Версия $VERSION. Скачайте .jar и импортируйте в Mindustry (Моды -> Импорт мода)."
+        fi

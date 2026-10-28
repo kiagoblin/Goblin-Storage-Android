@@ -2,7 +2,7 @@ name: "goblin-link"
 displayName: "Goblin Link"
 author: "Kiagoblin"
 main: "goblinlink.GoblinLinkMod"
-description: "Хранилище с возможностью авто-забора предметов из ядра."
+description: "Хранилище с автозабором предметов из ядра. Модули ёмкости и скорости, узлы связи, три стадии игры."
 version: "1.2.4"
 minGameVersion: "154"
 java: true

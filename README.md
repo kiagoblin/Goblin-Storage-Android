@@ -1,38 +1,30 @@
-# Mindustry Java Mod Template
-A Java Mindustry mod template that works on Android and PC. The Kotlin version of this mod can be seen [here](https://github.com/Anuken/MindustryKotlinModTemplate).
+# Goblin Link
 
-## Building for Desktop Testing
+Мод для Mindustry (ПК и Android): хранилище **Гоблин Линк**, которое связано с ядром и автоматически забирает предметы из него и возвращает обратно. Ёмкость и скорость растут с помощью модулей, которые работают на энергии.
 
-1. Install JDK **17**.
-2. Run `gradlew jar` [1].
-3. Your mod jar will be in the `build/libs` directory. **Only use this version for testing on desktop. It will not work with Android.**
-To build an Android-compatible version, you need the Android SDK. You can either let Github Actions handle this, or set it up yourself. See steps below.
+A Mindustry mod (PC and Android): the **Goblin Link** storage connected to your core that automatically pulls items from it and returns them. Capacity and speed grow with power-hungry modules.
 
-## Building through Github Actions
+## Скачать / Download
 
-This repository is set up with Github Actions CI to automatically build the mod for you every commit. This requires a Github repository, for obvious reasons.
-To get a jar file that works for every platform, do the following:
-1. Make a Github repository with your mod name, and upload the contents of this repo to it. Perform any modifications necessary, then commit and push. 
-2. Check the "Actions" tab on your repository page. Select the most recent commit in the list. If it completed successfully, there should be a download link under the "Artifacts" section. 
-3. Click the download link (should be the name of your repo). Import the jar contained within in Mindustry. This version should work both on Android and Desktop.
+- Последняя сборка / latest build: https://github.com/kiagoblin/Goblin-Storage-Android/releases/download/latest/Goblin-Storage-Android.jar
+- Все версии / all versions: [Releases](https://github.com/kiagoblin/Goblin-Storage-Android/releases)
+- Или найдите **Goblin Link** в браузере модов внутри игры. / Or find **Goblin Link** in the in-game mod browser.
 
-## Building Locally
+Установка: Моды -> Импорт мода (или положите `.jar` в папку модов). / Install: Mods -> Import mod.
 
-Building locally takes more time to set up, but shouldn't be a problem if you've done Android development before.
-1. Download the Android SDK, unzip it and set the `ANDROID_HOME` environment variable to its location.
-2. Make sure you have API level 30 installed, as well as any recent version of build tools (e.g. 30.0.1)
-3. Add a build-tools folder to your PATH. For example, if you have `30.0.1` installed, that would be `$ANDROID_HOME/build-tools/30.0.1`.
-4. Run `gradlew deploy`. If you did everything correctlly, this will create a jar file in the `build/libs` directory that can be run on both Android and desktop. 
+## Блоки
 
-## Adding Dependencies
+| Блок | Что делает |
+|---|---|
+| Гоблин Линк (2x2) | Забирает выбранные предметы из ядра и отдаёт соседним блокам; без выбора возвращает предметы в ядро. Без модулей: 10 предметов каждого вида и 2 предмета в секунду. |
+| Гоблин-хранилище | Увеличивает ёмкость Линка. Работает на энергии. |
+| Гоблин-процессор | Увеличивает скорость передачи. Работает на энергии. |
+| Гоблин-узел | Большой радиус связи: к узлу привязываются модули, а узел привязывается к Линку. |
 
-Please note that all dependencies on Mindustry, Arc or its submodules **must be declared as compileOnly in Gradle**. Never use `implementation` for core Mindustry or Arc dependencies. 
+У модулей и узлов три стадии игры: ранняя (1x1), средняя (2x2) и поздняя (3x3). Блоки поздней стадии дополнительно требуют криогенную жидкость.
 
-- `implementation` **places the entire dependency in the jar**, which is, in most mod dependencies, very undesirable. You do not want the entirety of the Mindustry API included with your mod.
-- `compileOnly` means that the dependency is only around at compile time, and not included in the jar.
+**Связывание:** нажмите на модуль, затем на Линк или узел в радиусе. Повторное нажатие разрывает связь. Нажав на узел, можно привязать к нему Линк и модули.
 
-Only use `implementation` if you want to package another Java library *with your mod*, and that library is not present in Mindustry already.
+## Сборка
 
---- 
-
-*[1]* *On Linux/Mac it's `./gradlew`, but if you're using Linux I assume you know how to run executables properly anyway.* 
+Мод собирается через GitHub Actions при каждом пуше в `master` (`./gradlew deploy`, Android-совместимый `.jar`).
