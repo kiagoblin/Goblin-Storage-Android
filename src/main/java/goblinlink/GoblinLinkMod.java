@@ -14,8 +14,11 @@ import static mindustry.type.ItemStack.with;
 public class GoblinLinkMod extends Mod {
 
     public static Block goblinLinkBlock;
-    public static Block goblinProcessor;
-    public static Block goblinStorage;
+
+    // Стадии игры: ранняя (1x1), средняя (2x2), поздняя (3x3).
+    public static Block[] processors = new Block[3];
+    public static Block[] storages = new Block[3];
+    public static Block[] nodes = new Block[3];
 
     public GoblinLinkMod() {
     }
@@ -26,48 +29,66 @@ public class GoblinLinkMod extends Mod {
 
         goblinLinkBlock = new GoblinLinkBlock("goblin-link");
 
-        // Процессор: ускоряет передачу предметов между Линком, ядром и соседями.
-        goblinProcessor = new GoblinModuleBlock(
-            "goblin-processor",
+        // ---------- Процессоры: скорость передачи (предметов в секунду) ----------
+        // Параметры: имя, размер, цена, энергия за тик, бонус ёмкости, бонус скорости, радиус связи с Линком (клетки)
+        processors[0] = new GoblinModuleBlock("goblin-processor", 1,
             with(Items.copper, 60, Items.lead, 80, Items.silicon, 120),
-            1.0f,   // потребление энергии за тик (60 в секунду)
-            0,      // бонус к ёмкости
-            15f     // бонус к скорости, предметов в секунду
-        );
+            1.0f, 0, 10f, 10f);
+        processors[1] = new GoblinModuleBlock("goblin-processor-mid", 2,
+            with(Items.titanium, 150, Items.silicon, 300, Items.graphite, 150, Items.lead, 100),
+            3.0f, 0, 40f, 14f);
+        processors[2] = new GoblinModuleBlock("goblin-processor-late", 3,
+            with(Items.thorium, 250, Items.plastanium, 150, Items.surgeAlloy, 100, Items.silicon, 500),
+            10.0f, 0, 150f, 20f);
 
-        // Хранилище: увеличивает ёмкость Линка.
-        goblinStorage = new GoblinModuleBlock(
-            "goblin-storage",
+        // ---------- Хранилища: ёмкость Линка (предметов каждого вида) ----------
+        storages[0] = new GoblinModuleBlock("goblin-storage", 1,
             with(Items.copper, 150, Items.lead, 100, Items.silicon, 50),
-            0.5f,   // потребление энергии за тик (30 в секунду)
-            250,    // бонус к ёмкости на каждый вид предмета
-            0f      // бонус к скорости
-        );
+            0.5f, 100, 0f, 10f);
+        storages[1] = new GoblinModuleBlock("goblin-storage-mid", 2,
+            with(Items.titanium, 200, Items.silicon, 250, Items.lead, 200, Items.metaglass, 100),
+            1.5f, 600, 0f, 14f);
+        storages[2] = new GoblinModuleBlock("goblin-storage-late", 3,
+            with(Items.thorium, 300, Items.plastanium, 200, Items.surgeAlloy, 150, Items.silicon, 400),
+            5.0f, 3000, 0f, 20f);
+
+        // ---------- Узлы связи: радиус в 3-4 раза больше, чем у модулей ----------
+        nodes[0] = new GoblinNodeBlock("goblin-node", 1,
+            with(Items.copper, 100, Items.lead, 100, Items.silicon, 80),
+            35f);
+        nodes[1] = new GoblinNodeBlock("goblin-node-mid", 2,
+            with(Items.titanium, 100, Items.silicon, 150, Items.lead, 100, Items.graphite, 80),
+            60f);
+        nodes[2] = new GoblinNodeBlock("goblin-node-late", 3,
+            with(Items.thorium, 100, Items.plastanium, 80, Items.surgeAlloy, 60, Items.silicon, 200),
+            120f);
 
         // Дерево исследований готово только после инициализации контента.
         Events.on(ContentInitEvent.class, e -> {
             TechTree.TechNode parent = TechTree.all.find(n -> n.content == Blocks.siliconSmelter);
             if (parent == null) return;
 
-            ItemStack[] linkCost = with(
+            TechTree.TechNode linkNode = new TechTree.TechNode(parent, goblinLinkBlock, with(
                 Items.silicon, 250,
                 Items.lead, 200,
                 Items.copper, 400
-            );
-
-            TechTree.TechNode linkNode = new TechTree.TechNode(parent, goblinLinkBlock, linkCost);
-
-            new TechTree.TechNode(linkNode, goblinProcessor, with(
-                Items.silicon, 200,
-                Items.lead, 250,
-                Items.copper, 300
             ));
 
-            new TechTree.TechNode(linkNode, goblinStorage, with(
-                Items.silicon, 150,
-                Items.lead, 250,
-                Items.copper, 300
-            ));
+            // Ранняя стадия открывается после Линка.
+            TechTree.TechNode[] early = new TechTree.TechNode[3];
+            early[0] = new TechTree.TechNode(linkNode, nodes[0], with(Items.silicon, 100, Items.lead, 150, Items.copper, 200));
+            early[1] = new TechTree.TechNode(linkNode, processors[0], with(Items.silicon, 200, Items.lead, 250, Items.copper, 300));
+            early[2] = new TechTree.TechNode(linkNode, storages[0], with(Items.silicon, 150, Items.lead, 250, Items.copper, 300));
+
+            // Средняя стадия: после соответствующего блока ранней, поздняя: после средней.
+            TechTree.TechNode[] mid = new TechTree.TechNode[3];
+            mid[0] = new TechTree.TechNode(early[0], nodes[1], with(Items.titanium, 400, Items.silicon, 400, Items.graphite, 200));
+            mid[1] = new TechTree.TechNode(early[1], processors[1], with(Items.titanium, 600, Items.silicon, 600, Items.graphite, 300));
+            mid[2] = new TechTree.TechNode(early[2], storages[1], with(Items.titanium, 600, Items.silicon, 500, Items.metaglass, 300));
+
+            new TechTree.TechNode(mid[0], nodes[2], with(Items.thorium, 500, Items.plastanium, 300, Items.surgeAlloy, 200));
+            new TechTree.TechNode(mid[1], processors[2], with(Items.thorium, 800, Items.plastanium, 500, Items.surgeAlloy, 300));
+            new TechTree.TechNode(mid[2], storages[2], with(Items.thorium, 800, Items.plastanium, 500, Items.surgeAlloy, 300));
         });
     }
 }

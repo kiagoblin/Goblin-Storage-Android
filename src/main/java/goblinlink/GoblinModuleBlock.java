@@ -29,16 +29,17 @@ public class GoblinModuleBlock extends Block {
     /** Радиус связывания с Линком, в клетках. */
     public float linkRange = 10f;
 
-    public GoblinModuleBlock(String name, ItemStack[] reqs, float powerUse, int capacityBonus, float speedBonus) {
+    public GoblinModuleBlock(String name, int size, ItemStack[] reqs, float powerUse, int capacityBonus, float speedBonus, float linkRange) {
         super(name);
 
         this.capacityBonus = capacityBonus;
         this.speedBonus = speedBonus;
+        this.linkRange = linkRange;
 
         requirements(Category.effect, reqs);
 
-        size = 1;
-        health = 150;
+        this.size = size;
+        health = 120 * size * size;
         update = true;
         solid = true;
         destructible = true;
@@ -84,16 +85,31 @@ public class GoblinModuleBlock extends Block {
         /** Позиция привязанного Линка, -1 если связи нет. */
         public int link = -1;
 
-        /** Возвращает привязанный Линк, если он существует, наш и в радиусе. */
+        /** Возвращает Линк, к которому модуль привязан напрямую или через узел связи. */
         public GoblinLinkBlock.GoblinLinkBuild linkedLink() {
             if (link == -1) return null;
 
             Building other = Vars.world.build(link);
             if (other == null || other.team != team) return null;
-            if (!(other instanceof GoblinLinkBlock.GoblinLinkBuild)) return null;
-            if (!inLinkRange(other)) return null;
 
-            return (GoblinLinkBlock.GoblinLinkBuild) other;
+            if (other instanceof GoblinLinkBlock.GoblinLinkBuild) {
+                return inLinkRange(other) ? (GoblinLinkBlock.GoblinLinkBuild) other : null;
+            }
+
+            if (other instanceof GoblinNodeBlock.GoblinNodeBuild) {
+                GoblinNodeBlock.GoblinNodeBuild node = (GoblinNodeBlock.GoblinNodeBuild) other;
+                return node.reaches(this) ? node.linkedLink() : null;
+            }
+
+            return null;
+        }
+
+        /** То, к чему модуль привязан (Линк или узел), либо null. */
+        public Building linkTarget() {
+            if (link == -1) return null;
+
+            Building other = Vars.world.build(link);
+            return other != null && other.team == team ? other : null;
         }
 
         private boolean inLinkRange(Building other) {
@@ -114,12 +130,14 @@ public class GoblinModuleBlock extends Block {
 
         @Override
         public boolean onConfigureBuildTapped(Building other) {
-            if (other instanceof GoblinLinkBlock.GoblinLinkBuild && other.team == team && inLinkRange(other)) {
-                if (link == other.pos()) {
-                    configure(-1);
-                } else {
-                    configure(other.pos());
-                }
+            if (other == null || other.team != team) return true;
+
+            boolean validLink = other instanceof GoblinLinkBlock.GoblinLinkBuild && inLinkRange(other);
+            boolean validNode = other instanceof GoblinNodeBlock.GoblinNodeBuild
+                && ((GoblinNodeBlock.GoblinNodeBuild) other).reaches(this);
+
+            if (validLink || validNode) {
+                configure(link == other.pos() ? -1 : other.pos());
                 return false;
             }
 
@@ -132,7 +150,7 @@ public class GoblinModuleBlock extends Block {
 
             Drawf.dashCircle(x, y, linkRange * Vars.tilesize, Pal.accent);
 
-            GoblinLinkBlock.GoblinLinkBuild target = linkedLink();
+            Building target = linkTarget();
             if (target != null) {
                 Drawf.square(target.x, target.y, target.block.size * Vars.tilesize / 2f + 1f, Pal.place);
             }
@@ -142,7 +160,7 @@ public class GoblinModuleBlock extends Block {
         public void draw() {
             super.draw();
 
-            GoblinLinkBlock.GoblinLinkBuild target = linkedLink();
+            Building target = linkTarget();
             if (target == null) return;
 
             Draw.z(Layer.power);
