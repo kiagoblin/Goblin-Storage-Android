@@ -32,36 +32,36 @@ public class GoblinLinkMod extends Mod {
         // ---------- Процессоры: скорость передачи (предметов в секунду) ----------
         // Параметры: имя, размер, цена, энергия за тик, бонус ёмкости, бонус скорости, радиус связи с Линком (клетки)
         processors[0] = new GoblinModuleBlock("goblin-processor", 1,
-            with(Items.copper, 60, Items.lead, 80, Items.silicon, 120),
-            1.0f, 0, 10f, 10f);
+            with(Items.copper, 90, Items.lead, 120, Items.silicon, 180),
+            1.0f, 0, 10f, 10f, 0f);
         processors[1] = new GoblinModuleBlock("goblin-processor-mid", 2,
-            with(Items.titanium, 150, Items.silicon, 300, Items.graphite, 150, Items.lead, 100),
-            3.0f, 0, 40f, 14f);
+            with(Items.titanium, 225, Items.silicon, 450, Items.graphite, 225, Items.lead, 150),
+            3.0f, 0, 40f, 14f, 0f);
         processors[2] = new GoblinModuleBlock("goblin-processor-late", 3,
-            with(Items.thorium, 250, Items.plastanium, 150, Items.surgeAlloy, 100, Items.silicon, 500),
-            10.0f, 0, 150f, 20f);
+            with(Items.thorium, 375, Items.plastanium, 225, Items.surgeAlloy, 150, Items.silicon, 750),
+            10.0f, 0, 150f, 20f, 0.10f);
 
         // ---------- Хранилища: ёмкость Линка (предметов каждого вида) ----------
         storages[0] = new GoblinModuleBlock("goblin-storage", 1,
-            with(Items.copper, 150, Items.lead, 100, Items.silicon, 50),
-            0.5f, 100, 0f, 10f);
+            with(Items.copper, 225, Items.lead, 150, Items.silicon, 75),
+            0.5f, 100, 0f, 10f, 0f);
         storages[1] = new GoblinModuleBlock("goblin-storage-mid", 2,
-            with(Items.titanium, 200, Items.silicon, 250, Items.lead, 200, Items.metaglass, 100),
-            1.5f, 600, 0f, 14f);
+            with(Items.titanium, 300, Items.silicon, 375, Items.lead, 300, Items.metaglass, 150),
+            1.5f, 600, 0f, 14f, 0f);
         storages[2] = new GoblinModuleBlock("goblin-storage-late", 3,
-            with(Items.thorium, 300, Items.plastanium, 200, Items.surgeAlloy, 150, Items.silicon, 400),
-            5.0f, 3000, 0f, 20f);
+            with(Items.thorium, 450, Items.plastanium, 300, Items.surgeAlloy, 225, Items.silicon, 600),
+            5.0f, 1500, 0f, 20f, 0.06f);
 
         // ---------- Узлы связи: радиус в 3-4 раза больше, чем у модулей ----------
         nodes[0] = new GoblinNodeBlock("goblin-node", 1,
-            with(Items.copper, 100, Items.lead, 100, Items.silicon, 80),
-            35f);
+            with(Items.copper, 150, Items.lead, 150, Items.silicon, 120),
+            35f, 0f);
         nodes[1] = new GoblinNodeBlock("goblin-node-mid", 2,
-            with(Items.titanium, 100, Items.silicon, 150, Items.lead, 100, Items.graphite, 80),
-            60f);
+            with(Items.titanium, 150, Items.silicon, 225, Items.lead, 150, Items.graphite, 120),
+            60f, 0f);
         nodes[2] = new GoblinNodeBlock("goblin-node-late", 3,
-            with(Items.thorium, 100, Items.plastanium, 80, Items.surgeAlloy, 60, Items.silicon, 200),
-            120f);
+            with(Items.thorium, 150, Items.plastanium, 120, Items.surgeAlloy, 90, Items.silicon, 300),
+            120f, 0.04f);
 
         // Дерево исследований готово только после инициализации контента.
         Events.on(ContentInitEvent.class, e -> {

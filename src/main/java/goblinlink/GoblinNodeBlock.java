@@ -6,6 +6,7 @@ import arc.graphics.g2d.Lines;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
+import mindustry.content.Liquids;
 import mindustry.gen.Building;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
@@ -22,11 +23,14 @@ public class GoblinNodeBlock extends Block {
 
     /** Радиус действия узла, в клетках. */
     public float range;
+    /** Узел поздней стадии работает только при подаче криогенной жидкости. */
+    public boolean needsCoolant;
 
-    public GoblinNodeBlock(String name, int size, ItemStack[] reqs, float range) {
+    public GoblinNodeBlock(String name, int size, ItemStack[] reqs, float range, float cryoUse) {
         super(name);
 
         this.range = range;
+        this.needsCoolant = cryoUse > 0f;
 
         requirements(Category.effect, reqs);
 
@@ -36,6 +40,11 @@ public class GoblinNodeBlock extends Block {
         solid = true;
         destructible = true;
         configurable = true;
+
+        if (cryoUse > 0f) {
+            hasLiquids = true;
+            consumeLiquid(Liquids.cryofluid, cryoUse);
+        }
 
         config(Integer.class, (GoblinNodeBuild build, Integer pos) -> {
             build.link = pos;
@@ -70,6 +79,7 @@ public class GoblinNodeBlock extends Block {
         /** Привязанный Линк, если он существует, наш и в радиусе узла. */
         public GoblinLinkBlock.GoblinLinkBuild linkedLink() {
             if (link == -1) return null;
+            if (needsCoolant && efficiency <= 0.5f) return null;
 
             Building other = Vars.world.build(link);
             if (other == null || other.team != team) return null;

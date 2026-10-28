@@ -6,6 +6,7 @@ import arc.graphics.g2d.Lines;
 import arc.util.io.Reads;
 import arc.util.io.Writes;
 import mindustry.Vars;
+import mindustry.content.Liquids;
 import mindustry.gen.Building;
 import mindustry.graphics.Drawf;
 import mindustry.graphics.Layer;
@@ -29,7 +30,7 @@ public class GoblinModuleBlock extends Block {
     /** Радиус связывания с Линком, в клетках. */
     public float linkRange = 10f;
 
-    public GoblinModuleBlock(String name, int size, ItemStack[] reqs, float powerUse, int capacityBonus, float speedBonus, float linkRange) {
+    public GoblinModuleBlock(String name, int size, ItemStack[] reqs, float powerUse, int capacityBonus, float speedBonus, float linkRange, float cryoUse) {
         super(name);
 
         this.capacityBonus = capacityBonus;
@@ -47,6 +48,12 @@ public class GoblinModuleBlock extends Block {
         hasPower = true;
 
         consumePower(powerUse);
+
+        // Модули поздней стадии дополнительно требуют криогенную жидкость.
+        if (cryoUse > 0f) {
+            hasLiquids = true;
+            consumeLiquid(Liquids.cryofluid, cryoUse);
+        }
 
         config(Integer.class, (GoblinModuleBuild build, Integer pos) -> {
             build.link = pos;

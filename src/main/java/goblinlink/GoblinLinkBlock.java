@@ -32,7 +32,7 @@ public class GoblinLinkBlock extends StorageBlock {
         super(name);
 
         // Без requirements блок скрыт: его нет ни в меню строительства, ни в базе данных.
-        requirements(Category.effect, with(Items.copper, 1000, Items.lead, 650, Items.silicon, 500));
+        requirements(Category.effect, with(Items.copper, 1500, Items.lead, 975, Items.silicon, 750));
 
         size = 2;
         itemCapacity = BASE_CAPACITY;
